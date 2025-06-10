@@ -65,9 +65,10 @@ model FixRequest {
 
 model Payment {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId    String[]   @db.ObjectId
+  userId    String   @db.ObjectId
   amount    Float
   status    String   @default("pending")
+  dueDate   DateTime
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

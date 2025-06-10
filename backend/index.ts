@@ -3,9 +3,10 @@ import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import { loginUser, logoutUser,registerUser } from './Controller/systemController';
 import { getUserId, getUserAll, updateUserData,deleteUserData } from './Controller/userController';
-import {createNewPayment,getPaymentId,getPayments,updateExistingPayment,deleteExistingPayment } from './Controller/paymentController';
+import {createNewPayment,getPaymentId,getPayments,updateExistingPayment,deleteExistingPayment,checkdue } from './Controller/paymentController';
 import {createNewBooking, getBookingId, getBookings, updateExistingBooking, deleteBookingById} from './Controller/bookingController';
 import { createNewRoom, getRoom, getRooms, updateExistingRoom, assignUserToRoom,unassignUserFromRoom } from './Controller/roomController';
+import { handleCreateFixRequest,handleDeleteFixRequest,handleGetAllFixRequests,handleGetFixRequestById,handleUpdateFixRequest } from './Controller/fixrequestController';
 import { authenticateToken, AdminOnly } from './middleware/auth';
 
 const app = express();
@@ -80,6 +81,14 @@ app.get('/payments', authenticateToken, AdminOnly, getPayments);
 app.get('/payments/:id', authenticateToken, AdminOnly, getPaymentId);
 app.patch('/payments/:id', modifyLimiter, authenticateToken, AdminOnly, updateExistingPayment);
 app.delete('/payments/:id', modifyLimiter, authenticateToken, AdminOnly, deleteExistingPayment);
+app.get('/payments/checkdue/update', authenticateToken, checkdue);
+
+//fix request
+app.post('/fixrequests', modifyLimiter, authenticateToken, handleCreateFixRequest);
+app.get('/fixrequests', authenticateToken, handleGetAllFixRequests);
+app.get('/fixrequests/:id', authenticateToken, handleGetFixRequestById);
+app.patch('/fixrequests/:id', modifyLimiter, authenticateToken, handleUpdateFixRequest);
+app.delete('/fixrequests/:id', modifyLimiter, authenticateToken, handleDeleteFixRequest);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

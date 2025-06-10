@@ -9,26 +9,16 @@ export const createNewPayment = async (req: Request, res: Response) => {
     const userId = paymentData.userId;
     
 
-    await Promise.all(userId.map(async (id: string) => {
-      try {
-        const user = await getUserById(id);
-        if (!user) {
-          console.error(`User with ID ${id} not found`);
-          return;
-        }
-        const updatedUser = await updateUser(id, { 
-          bill: {
-            push: newPayment.id  
-          }
-        });
-        
-        if (!updatedUser) {
-          console.error(`Failed to update user with ID ${id}`);
-        }
-      } catch (error) {
-        console.error(`Error updating user ${id}:`, error);
-      }
-    }));
+    const user = await getUserById(userId);
+
+    if (!user) {
+      res.status(404).json({ message: "User not found" });
+      return;
+    }
+
+    const updatedUser = await updateUser(userId, { 
+      bill: [...user.bill, newPayment.id] 
+    });
     
     res.status(201).json(newPayment);
   } catch (error) {
@@ -84,20 +74,48 @@ export const deleteExistingPayment = async (req: Request, res: Response) => {
     }
     
     const userId = payment.userId;
-    await Promise.all(userId.map(async (id: string) => {
-      const user = await getUserById(id);
-      if (!user) {
-        console.error(`User with ID ${id} not found`);
-        return;
-      }
-      const updatedUser = await updateUser(id, { 
+    const user = await getUserById(userId);
+    if (!user) {
+      res.status(404).json({ message: "User not found" });
+      return;
+    }
+    const updatedUser = await updateUser(userId, { 
         bill: user.bill.filter((billId: string) => billId !== paymentId) 
       });
-    }));
     await deletePayment(paymentId);
     res.status(204).send("Payment deleted successfully");
   } catch (error) {
     console.error("Error deleting payment:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const checkdue = async (req: Request, res: Response) => {
+  try{
+    const payments = await getAllPayments();
+    const currentDate = new Date();
+    const duePayments = payments.filter(payment => {
+      const due = payment.status == "pending" ;
+      return due;
+    });
+
+    
+    if (duePayments.length === 0) {
+      res.status(200).json({ message: "No due payments found" });
+      return;
+    }
+
+    duePayments.forEach(payment => {
+      const dueDate = new Date(payment.dueDate);
+      if (dueDate < currentDate) {
+        payment.status = "overdue";
+        updatePayment(payment.id, { status: "overdue" });
+      }
+    });
+    res.status(200).json({
+      message: "Due payments checked successfully",});
+  } catch (error) {
+    console.error("Error checking due payments:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };

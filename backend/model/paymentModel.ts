@@ -23,7 +23,7 @@ export async function getPaymentsByUser(userId: string) {
   const payments = await prisma.payment.findMany({
     where: { 
       userId: { 
-        has: userId
+        equals: userId
       }
     },
   });
