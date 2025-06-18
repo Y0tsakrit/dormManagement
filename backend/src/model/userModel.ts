@@ -40,3 +40,10 @@ export async function deleteUser(id: string) {
   });
   return user;
 }
+
+export async function getUserByPhone(phone: string) {
+  const user = await prisma.user.findUnique({
+    where: { phone },
+  });
+  return user;
+}

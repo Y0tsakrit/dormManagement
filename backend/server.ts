@@ -31,11 +31,9 @@ async function startServer() {
       }
     });
 
-    // Graceful shutdown handlers
     const gracefulShutdown = async (signal:any) => {
       console.log(`Received ${signal}. Starting graceful shutdown...`);
       
-      // Stop accepting new requests
       server.close(async () => {
         console.log('HTTP server closed');
 

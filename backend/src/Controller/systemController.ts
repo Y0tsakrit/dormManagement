@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
-import {createUser, getUserByEmail} from "../model/userModel";
+import {createUser, getUserByEmail, getUserByPhone} from "../model/userModel";
 import {getRoomByUser} from "../model/roomModel";
-import { signedCookie } from "cookie-parser";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
@@ -61,12 +60,17 @@ export const logoutUser = async (req: Request, res: Response) => {
 export const registerUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password, name } = req.body;
-    const existingUser = await getUserByEmail(email);
-    
-    if (existingUser) {
-      res.status(409).json({ message: "User already exists" });
+    const existingEmail = await getUserByEmail(email);
+    const existingPhone = await getUserByPhone(req.body.phone);
+    if (existingEmail) {
+      res.status(409).json({ message: "Email already exists" });
       return;
-    }   
+    }
+    
+    if (existingPhone) {
+      res.status(409).json({ message: "Phone number already exists" });
+      return;
+    }
 
     const hashedPassword = await bcrypt.hash(password, saltRounds);
     const newUser = await createUser({ ...req.body, password: hashedPassword });
